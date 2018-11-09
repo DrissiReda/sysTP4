@@ -285,7 +285,7 @@ de configurer les liens mis à disposition des clients par apache.\\
 Nous rajoutons les lignes suivantes sous la directive \texttt{DocumentRoot /var/www/html} :
 \begin{tcolorbox}
   \begin{verbatim}
-  Alias /istyblog /usr/share/wordpress
+  Alias /server  /usr/share/wordpress
   <Directory /usr/share/wordpress>
       Options FollowSymLinks
       AllowOverride Limit Options FileInfo
@@ -333,11 +333,96 @@ Cependant notre site wordpress ne fonctionne pas, il faudra changer les champs W
 et Site Address en modifiant le port et en mettant \textit{https} au lieu de \textit{http} dans
 Settings > General.\\
 Nous remarquons que l'émetteur du certificat SSL n'est pas reconnu.\\
+Ceci peut-être corrigé en utilisant l'outil \texttt{openssl} ou bien si nous avons envie de rendre le
+site public, l'outil gratuit \texttt{letsencrypt}.
 
 \subsection{Exercice 14}
 Si un attaquant parvient à obtenir la clé privée de notre paire, il peut voler l'identité du site,
 puis voler les données des visiteurs du sites, et autres informations.
+\newpage
+\section{NFS}
+\subsection{Exercice 15}
+\begin{itemize}
+  \item \begin{LARGE}{\textbf{Serveur}} \end{LARGE}
+  \vspace{0.3cm}\\
+Nous installons les binaires du serveur NFS :
+\begin{tcolorbox}
+  \begin{verbatim}
+    $ aptitude install nfs-kernel-server
+  \end{verbatim}
+\end{tcolorbox}
 
+Il faudra exporter le répertoire NFS. Ce dossier va être monté à distance, donc accessible
+depuis la machine client. Puis nous devrons rajouter une nouvelle entrée d'export NFS
+dans le fichier \texttt{/etc/exports}. Nous allons aussi rajouter un fichier afin de tester.\\
+Cela va permettre à n'importe quelle adresse IP avec des droits de lecture/écriture d'accèder
+à ce répertoire. Puis nous appliquons ces changements.
+Nous pouvons voir quelques exemples avec la dernière commande.
+\begin{tcolorbox}
+  \begin{verbatim}
+$ mkdir /var/nfs-export
+$ echo "testing nfs for sysTP4" >> /var/nfs-export/file
+$ echo "/var/nfs-export *(rw,sync,no_subtree_check,\
+no_root_squash)" >> /etc/exports
+$ exportfs -a
+$ man exports
+  \end{verbatim}
+\end{tcolorbox}
+Nous activons le démarrage automatique avec la commande :
+\begin{tcolorbox}
+  \begin{verbatim}
+    $ systemctl enable nfs-kernel-server
+  \end{verbatim}
+\end{tcolorbox}
+  \item \begin{LARGE}{\textbf{Client}} \end{LARGE}
+  \vspace{0.3cm}\\
+Nous installons les binaires du client NFS
+\begin{tcolorbox}
+  \begin{verbatim}
+    $ aptitude install nfs-common
+  \end{verbatim}
+\end{tcolorbox}
+Nous allons créer un point de montage de notre répertoire NFS, puis le monter.\\
+Nous allons ensuite tester nos droits de lecture/écriture.
+\begin{tcolorbox}
+  \begin{verbatim}
+    $ mkdir /mnt/nfs
+    $ mount -t nfs 192.168.0.11:/var/nfs-export /mnt/nfs/
+    $ cat /mnt/nfs/file
+    > testing nfs for sysTP4
+    $ touch /mnt/nfs/foo
+    $ ls /mnt/nfs
+    > file foo
+  \end{verbatim}
+\end{tcolorbox}
+Pour rendre ce montage automatique à chaque démarrage nous pouvons rajouter
+cette ligne dans le \texttt{/etc/fstab} :
+\begin{tcolorbox}
+  \begin{verbatim}
+    192.168.0.11:/var/nfs-export /mnt/nfs/    nfs
+  \end{verbatim}
+\end{tcolorbox}
+\end{itemize}
+\subsection{Exercice 16}
+Si une machine client est compromise, l'attaquant peut usurper l'identité de
+n'importe quel autre utilisateur, donc il aura accès libre au répertoire partagé.
+\section{Jenkins}
+\subsection{Exercice 17}
+Jenkins dépend de java donc il faut vérifier qu'il est présent.
+\begin{tcolorbox}
+  \begin{verbatim}
+$ java -version
+$ wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key\
+ | sudo apt-key add -
+$ sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > \
+/etc/apt/sources.list.d/jenkins.list'
+$ aptitude update
+$ aptitude install jenkins
+  \end{verbatim}
+\end{tcolorbox}
+\subsection{Exercice 18}
+Puisque nous avons opté pour l'installation du .deb plutôt que l'installation
+manuelle, jenkins est installé sur \texttt{/var/lib/jenkins}
 \begin{tcolorbox}
   \begin{verbatim}
   \end{verbatim}
