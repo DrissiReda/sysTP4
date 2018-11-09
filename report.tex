@@ -177,27 +177,27 @@ Nous allons examiner les fichiers de log pour voir les tentatives de connexion:
 \begin{itemize}
   \item \texttt{/var/log/auth.log}
     \begin{verbatim}
-Nov  5 18:35:48 server sshd[891]: Failed password for isty from 10.0.2.2 port 58374 ssh2
-Nov  5 18:35:50 server sshd[891]: Failed password for isty from 10.0.2.2 port 58374 ssh2
-Nov  5 18:35:50 server sshd[891]: Connection closed by 10.0.2.2 port 58374 [preauth]
-Nov  5 18:36:52 server sshd[893]: Failed password for isty from 10.0.2.2 port 58375 ssh2
-Nov  5 18:36:52 server sshd[893]: Failed password for isty from 10.0.2.2 port 58375 ssh2
-Nov  5 18:36:52 server sshd[893]: Connection closed by 10.0.2.2 port 58375 [preauth]
-Nov  5 18:36:54 server sshd[895]: Failed password for isty from 10.0.2.2 port 58376 ssh2
-Nov  5 18:36:54 server sshd[895]: Failed password for isty from 10.0.2.2 port 58376 ssh2
-Nov  5 18:36:54 server sshd[895]: Connection closed by 10.0.2.2 port 58376 [preauth]
+Nov  5 18:25:48 server sshd[891]: Failed password for isty from 10.0.2.2 port 58374 ssh2
+Nov  5 18:25:50 server sshd[891]: Failed password for isty from 10.0.2.2 port 58374 ssh2
+Nov  5 18:25:50 server sshd[891]: Connection closed by 10.0.2.2 port 58374 [preauth]
+Nov  5 18:26:52 server sshd[893]: Failed password for isty from 10.0.2.2 port 58375 ssh2
+Nov  5 18:26:52 server sshd[893]: Failed password for isty from 10.0.2.2 port 58375 ssh2
+Nov  5 18:26:52 server sshd[893]: Connection closed by 10.0.2.2 port 58375 [preauth]
+Nov  5 18:26:54 server sshd[895]: Failed password for isty from 10.0.2.2 port 58376 ssh2
+Nov  5 18:26:54 server sshd[895]: Failed password for isty from 10.0.2.2 port 58376 ssh2
+Nov  5 18:26:54 server sshd[895]: Connection closed by 10.0.2.2 port 58376 [preauth]
 
     \end{verbatim}
   \item \texttt{var/log/fail2ban.log}
       \begin{verbatim}
-2018-11-05 18:35:48,868 fail2ban.filter         [830]: INFO    [sshd] Found 10.0.2.2
-2018-11-05 18:35:50,329 fail2ban.filter         [830]: INFO    [sshd] Found 10.0.2.2
-2018-11-05 18:36:52,537 fail2ban.filter         [830]: INFO    [sshd] Found 10.0.2.2
-2018-11-05 18:36:52,702 fail2ban.filter         [830]: INFO    [sshd] Found 10.0.2.2
-2018-11-05 18:36:54,187 fail2ban.filter         [830]: INFO    [sshd] Found 10.0.2.2
-2018-11-05 18:36:54,353 fail2ban.filter         [830]: INFO    [sshd] Found 10.0.2.2
-2018-11-05 18:36:54,371 fail2ban.actions        [830]: NOTICE  [sshd] Ban 10.0.2.2
-2018-11-05 18:46:54,906 fail2ban.actions        [830]: NOTICE  [sshd] Unban 10.0.2.2
+2018-11-05 18:25:48,324 fail2ban.filter         [920]: INFO    [sshd] Found 10.0.2.2
+2018-11-05 18:25:50,148 fail2ban.filter         [920]: INFO    [sshd] Found 10.0.2.2
+2018-11-05 18:26:52,467 fail2ban.filter         [920]: INFO    [sshd] Found 10.0.2.2
+2018-11-05 18:26:52,209 fail2ban.filter         [920]: INFO    [sshd] Found 10.0.2.2
+2018-11-05 18:26:54,721 fail2ban.filter         [920]: INFO    [sshd] Found 10.0.2.2
+2018-11-05 18:26:54,484 fail2ban.filter         [920]: INFO    [sshd] Found 10.0.2.2
+2018-11-05 18:26:54,369 fail2ban.actions        [920]: NOTICE  [sshd] Ban 10.0.2.2
+2018-11-05 18:26:54,872 fail2ban.actions        [920]: NOTICE  [sshd] Unban 10.0.2.2
       \end{verbatim}
   \end{itemize}
 On remarque que seulement deux tentatives apparaissent dans les logs alors qu'on a trois chances
@@ -422,9 +422,58 @@ $ aptitude install jenkins
 \end{tcolorbox}
 \subsection{Exercice 18}
 Puisque nous avons opté pour l'installation du .deb plutôt que l'installation
-manuelle, jenkins est installé sur \texttt{/var/lib/jenkins}
+manuelle, jenkins est installé sur \texttt{/var/lib/jenkins}, et l'attribution
+de droits à l'utilisateur tomcat7 n'est pas nécessaire, et peut causer des problèmes.
+\\
+La ligne à ajouter n'a pas été marquée sur l'énoncé.
+
+\subsection{Exercice 19}
+\begin{enumerate}
+  \item Activation du connecteur AJP :
+  Nous allons à la ligne \texttt{\textbf{JENKINS\_ARGS}} du fichier \texttt{
+  /etc/default/jenkins} :
+  \begin{tcolorbox}
+    \begin{verbatim}
+      --prefix=/jenkins --httpPort=-1 --ajp13Port=8009 --ajp13ListenAddress=127.0.0.1
+    \end{verbatim}
+  \end{tcolorbox}
+  L'option \texttt{httpPort} permet de désactiver le listener http.\\
+  L'option \texttt{ajp13Port} détermine le port sur lequel le connecteur ajp est activé.
+  L'option \texttt{ajp13listenAddress} permet de refuser les connexions ne venant
+  pas de l'adress \textit{localhost}. Donc oblige le client à passer par Apache.
+
+\item Nous allons commencer par activer les bons modules apache :
+
 \begin{tcolorbox}
   \begin{verbatim}
+    $ a2enmod proxy
+    $ a2enmod headers
   \end{verbatim}
 \end{tcolorbox}
+\item
+Puis nous allons créer le fichier \texttt{jenkins.conf} dans le répertoire
+\texttt{/etc/apache2/mods-available}.
+\begin{tcolorbox}
+  \begin{verbatim}
+  <Proxy /jenkins>
+    ProxyPass ajp://localhost:8009/jenkins
+    ProxyPassReverse ajp://localhost:8009/jenkins
+  </Proxy>
+  \end{verbatim}
+\end{tcolorbox}
+\item Nous allons faire en sorte que le serveur vérifie que proxy\_ajp est activé
+au moment du démarrage :
+\begin{tcolorbox}
+  \begin{verbatim}
+echo "#Depends proxy_ajp" > proxy-jenkins.load
+  \end{verbatim}
+\end{tcolorbox}
+\item Nous allons activer le module et relancer le serveur
+\begin{tcolorbox}
+  \begin{verbatim}
+    $ a2enmod proxy_ajp
+    $ systemctl restart apache2
+  \end{verbatim}
+\end{tcolorbox}
+\end{enumerate}
 \end{document}
